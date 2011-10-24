@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "../Input/Input.h"
 #include "../Utility/Utility.h"
 
 // コンストラクタ
@@ -11,6 +12,11 @@ Application::Application( HINSTANCE hInstance ):
 HRESULT Application::Initialize( const int width, const int height, const bool fullScreen, const LPCTSTR windowName ){
 	// ウインドウの生成
 	if( FAILED( m_spWindowBase->InitializeWindow( width, height, fullScreen, windowName, m_spWindowBase.get() ) ) ){
+		return E_FAIL;
+	}
+
+	// Inputの初期化
+	if( FAILED( Input::Instance().Initialize( m_spWindowBase->GetHWND(), m_spWindowBase->GetHINSTANCE() ) ) ){
 		return E_FAIL;
 	}
 
