@@ -4,7 +4,7 @@
 
 // コンストラクタ
 ParentScene::ParentScene():
-	m_Scene( NULL )
+	m_Scene( new GameScene )
 {
 }
 
