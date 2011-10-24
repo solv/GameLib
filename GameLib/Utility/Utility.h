@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include <crtdbg.h>
 
 // è‚ğ‰Á‚¦‚½SAFE_DELETEŒnƒ}ƒNƒ
