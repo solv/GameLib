@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "../Common.h"
+#include "../Utility/Utility.h"
 
 //
 // インプットクラス
