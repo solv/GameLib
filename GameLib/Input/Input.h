@@ -1,88 +1,99 @@
 #pragma once
 
-#include "../stdafx.h"
+#define DIRECTINPUT_VERSION		DIRECTINPUT_HEADER_VERSION
+#include <dinput.h>
+#include <boost/shared_ptr.hpp>
 #include "KeyArray.h"
 #include "ButtonArray.h"
 
 // 前方宣言
-class Keyboard;
+class KeyBoard;
 class JoyPad;
 
-//
-// 入力管理クラス
-//
-class Input : private boost::noncopyable
+class Input
 {
 private:
-	boost::intrusive_ptr<IDirectInput8> m_pDirectInput;	// DirectInputデバイス
-	boost::shared_ptr<Keyboard> m_Keyboard;				// キーボードを管理するデバイス
-	boost::shared_ptr<JoyPad> m_JoyPad;					// ジョイパッドを管理するデバイス
+	LPDIRECTINPUT8 m_pDirectInput;
 
 private:
 	// コンストラクタ
 	Input();
+	// コピーコンストラクタ
+	Input( const Input& );
 	// デストラクタ
 	~Input();
+
+private:
+	boost::shared_ptr<KeyBoard> m_KeyBoard;
+	boost::shared_ptr<JoyPad> m_JoyPad;
+	//boost::Shared_ptr<Mouse> m_Mouse;
 
 public:
 	// インスタンスの取得
 	static Input& Instance();
 
 	// DirectInputの初期化
-	HRESULT Initialize( const HWND, const HINSTANCE );
+	HRESULT Initialize( HWND hWnd, HINSTANCE hInstance );
 
 	// キーボードデバイスの取得
-	boost::shared_ptr<Keyboard> GetKeyboard() const;
+	KeyBoard* GetKeyBoard() const;
 
-	// キーボードデバイスの取得
-	boost::shared_ptr<JoyPad> GetJoyPad() const;
+	// ジョイパッドデバイスの取得
+	JoyPad* GetJoyPad() const;
 };
 
-
-//
-// キーボードデバイスクラス
-//
-class Keyboard : private boost::noncopyable
+class KeyBoard
 {
+public:
+	static const int KEY_NUM = 256;// キーボードのキー数
+
 private:
-	static const int KEYBOARD_BUFFER_NUM = 256;					// キーボードのキー配列の個数
-	boost::intrusive_ptr<IDirectInputDevice8> m_KeyboardDevice;	// キーボードデバイス
-	boost::array<int, KEYBOARD_BUFFER_NUM> m_KeyInputLevel;		// 入力状況を管理する配列
+	static const int DIMGR_BUFFER_SIZE = 256; // バッファーサイズ
+
+	bool m_KeyInputOnOffBuffer[KEY_NUM]; // キーの入力の有無
+	int m_KeyInputLevelBuffer[KEY_NUM];	 // キーの入力レベル
+
+	LPDIRECTINPUTDEVICE8	m_KeyBoardDevice; // キーボード用のデバイス
+	DIDEVICEOBJECTDATA		m_DeviceObject[DIMGR_BUFFER_SIZE];
 
 public:
 	// コンストラクタ
-	Keyboard();
+	KeyBoard();
 
 	// デストラクタ
-	~Keyboard();
+	~KeyBoard();
 
-	// キーボードデバイスの初期化
-	HRESULT Initialize( const boost::intrusive_ptr<IDirectInput8>, const HWND );
+	// キーボードの初期化
+	HRESULT Initialize( LPDIRECTINPUT8 pDirectInput, HWND hWnd  );
 
-	// 入力状態の更新
+	// 更新
 	HRESULT Update();
 
-	// 入力されたキーの取得
-	int GetKey( const KeyArray::Key ) const;
+	// 入力キーの取得
+	int GetKey( const KeyArray::Key key) const;
 };
 
-
-//
-// ジョイパッドデバイスクラス
-//
-class JoyPad : private boost::noncopyable
+class JoyPad
 {
-private:
-	static const int JOYPAD_BUFFER_NUM = 32;										// ジョイパッドのキー配列の個数
+public:
+	static const int JOYPAD_BUTTON_NUM	= 16;	// ジョイパッドのボタンの数
 
-	boost::intrusive_ptr<IDirectInput8>						m_pDirectInput;			// DirectInputデバイス
-	std::vector<boost::array<int, JOYPAD_BUFFER_NUM>>		m_ButtonInputLevel;		// 入力状況を管理する配列
-	std::vector<boost::intrusive_ptr<IDirectInputDevice8>>	m_JoyPadDeviceVector;	// ジョイパッドデバイス(可変長)
-	
 private:
-	// ジョイパッドを検出するためのコールバック関数
-	static BOOL CALLBACK EnumJoyPadCallback( const DIDEVICEINSTANCE* , LPVOID );
-	static BOOL CALLBACK EnumSizesCallback( LPCDIDEVICEOBJECTINSTANCE, LPVOID );
+	static const int DIMGR_BUFFER_SIZE = 256;	// バッファーサイズ
+	static int m_JoyPadNum; // 接続されているジョイパッドの個数
+
+	bool m_KeyInputOnOffBuffer[JOYPAD_BUTTON_NUM]; // キーの入力の有無
+	int  m_KeyInputLevelBuffer[JOYPAD_BUTTON_NUM];	 // キーの入力レベル
+
+	LPDIRECTINPUTDEVICE8	m_JoyPadDevice; // ジョイパッド用のデバイス
+	DIDEVICEOBJECTDATA		m_DeviceObject[JOYPAD_BUTTON_NUM];
+	DIDEVCAPS				m_DeviceCaps;
+	LPDIRECTINPUT8			m_pDirectInput; // DirectInputのデバイス
+
+private:
+	// ジョイパッド検出のコールバック関数
+	static BOOL CALLBACK EnumSizesCallback( LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID lpvRef );
+	static BOOL CALLBACK EnumJoyPadCallback( const DIDEVICEINSTANCE* lpddi, LPVOID lpContext );
 
 public:
 	// コンストラクタ
@@ -91,12 +102,15 @@ public:
 	// デストラクタ
 	~JoyPad();
 
-	// ジョイパッドデバイスの初期化
-	HRESULT Initialize( const boost::intrusive_ptr<IDirectInput8>, const HWND );
+	// ジョイパッドの初期化
+	HRESULT Initialize( LPDIRECTINPUT8 pDirectInput, HWND hWnd );
 
-	// 入力状態の更新
+	// 更新
 	HRESULT Update();
 
-	// 入力されたキーの取得
-	int GetKey( const DWORD padNum, const ButtonArray::Button ) const;
+	// 入力ボタンの取得
+	int GetKey( const ButtonArray::Button button ) const;
+
+	// 接続されているジョイパッドの個数
+	static int GetJoyPadNum();
 };

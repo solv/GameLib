@@ -1,6 +1,5 @@
 #pragma once
 
-// ジョイパッドのキー番号
 namespace ButtonArray {
 	enum Button {
 		BUTTON1 = 0,
