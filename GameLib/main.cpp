@@ -1,4 +1,4 @@
-#include "GameLib/Library.h"
+#include "GameLib.h"
 
 int APIENTRY _tWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow )
 {
@@ -6,8 +6,8 @@ int APIENTRY _tWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpC
 	MemoryLeaksChecker;
 	
 	// アプリケーションの初期化
-	CApplication ca( hInstance, hPrevInstance, lpCmdLine, nCmdShow );
-	if( FAILED( ca.Initialize() ) ){
+	Application ca( hInstance );
+	if( FAILED( ca.Initialize(640,480,false,_T("GameLib")) ) ){
 		return -1;
 	}
 
